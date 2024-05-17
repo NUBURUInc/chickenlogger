@@ -29,7 +29,7 @@ class Cfg(Consts):
     def createDefault(self):
         """ Create default config file """
         self.set(['Dev4','ai1','ai3','ai0','ai4','10','2000','1','10','False','.'])
-        self.settings = yaml.safe_load(inp)
+        # self.settings = yaml.safe_load(inp)
         with open(self.filename, 'w') as file:
             yaml.dump(self.settings, file)
         return None
@@ -92,8 +92,16 @@ class Cfg(Consts):
         """ Save config file to file """
         with open(self.filename, 'w') as file:
             yaml.dump(self.settings, file)
+
+        # print(open(self.filename).read())
         return None
 
     def print(self):
         print(self.settings)
         return None
+    
+if __name__=="__main__":
+    a = Cfg()
+    a.createDefault()
+    print(a.settings)
+    a.saveCfg()

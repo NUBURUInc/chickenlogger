@@ -6,16 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>799</width>
-    <height>796</height>
+    <width>1038</width>
+    <height>800</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Chicken Logger</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">
-</string>
+   <string notr="true"/>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -107,20 +106,6 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
-             <widget class="QPushButton" name="startMonitorButton">
-              <property name="text">
-               <string>Start Monitor</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
-             <widget class="QPushButton" name="startRecordButton">
-              <property name="text">
-               <string>Start Record</string>
-              </property>
-             </widget>
-            </item>
             <item row="1" column="1">
              <widget class="QPushButton" name="stopMonitorButton">
               <property name="text">
@@ -128,10 +113,24 @@
               </property>
              </widget>
             </item>
+            <item row="0" column="1">
+             <widget class="QPushButton" name="startMonitorButton">
+              <property name="text">
+               <string>Start Monitor</string>
+              </property>
+             </widget>
+            </item>
             <item row="1" column="2">
              <widget class="QPushButton" name="stopRecordButton">
               <property name="text">
                <string>Stop Record</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QPushButton" name="startRecordButton">
+              <property name="text">
+               <string>Start Record</string>
               </property>
              </widget>
             </item>
@@ -421,7 +420,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>799</width>
+     <width>1038</width>
      <height>21</height>
     </rect>
    </property>

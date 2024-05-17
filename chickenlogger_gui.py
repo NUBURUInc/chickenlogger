@@ -10,6 +10,7 @@ import random
 import time
 import threading
 import yamlParser as yp
+import os
 
 import nidaqmx
 from nidaqmx.constants import AcquisitionType, TerminalConfiguration, ThermocoupleType, TemperatureUnits
@@ -25,19 +26,25 @@ class Cfg():
         pass
 
 class MainWindow(uiclass, baseclass):
+    """
+    Main window of the application.
+
+    Window was mainly created in PyQt Designer and is labeled 'MainWindow.ui'
+    """
     def __init__(self):
         super().__init__()
         self.setupUi(self)
 
         # Create config file object
         self.conf = yp.Cfg()
+        self.loadSettings()
 
         # Filling out functionality
         self.startMonitorButton.clicked.connect(self.startMonitor)
         self.stopMonitorButton.clicked.connect(self.stopMonitor)
         self.startRecordButton.clicked.connect(self.startRecord)
         self.stopRecordButton.clicked.connect(self.stopRecord)
-        
+
         # Load and save buttons
         self.saveButton.clicked.connect(self.saveSettings)
         self.loadButton.clicked.connect(self.loadSettings)
@@ -72,22 +79,29 @@ class MainWindow(uiclass, baseclass):
         self.b2 = collections.deque([0.0] * self.bufsize, self.bufsize)
         self.b3 = collections.deque([0.0] * self.bufsize, self.bufsize)
 
-        # Create signal
+        # Create signal for sending data from DAQ to plots
         self.sig = SignalCommunicate()
         self.sig.request_graph_update.connect(self.updateGraphs)
 
-        # Create thread
+        # Create thread for talking to DAQ
         self.getSettings()
         self.iThread = InstrumentThread(func=self.updateData, settings=self.settings1)
 
+        # Format plots
         self.__formatPlots()
 
+        # Dropdown menue - NOT IMPLIMENTED YET
         self.avgDD.addItem('True')
         self.avgDD.addItem('False')
 
+        # Times used for saving data
         self.saving = False
         self.monit = False
         self.stime = time.time()
+
+        # Set initial button states
+        self.stopRecordButton.setDisabled(True)
+        self.stopMonitorButton.setDisabled(True)
 
         return
 
@@ -187,10 +201,12 @@ class MainWindow(uiclass, baseclass):
         self.b2.extend(data[2])
         self.b3.extend(data[3])
         
+        # Data saving function
         if self.saving:
             ctime = time.time()
             if self.savePer < (ctime - self.stime):
                 self.stime = ctime
+                os.makedirs(os.path.dirname(self.saveName), exist_ok=True)
                 with open(self.saveName, 'a') as file1:
                     linea = [str(ctime), str(self.b0[-1]), str(self.b1[-1]), str(self.b2[-1]), str(self.b3[-1])]
                     line = ','.join(linea) + '\n'
@@ -205,75 +221,88 @@ class MainWindow(uiclass, baseclass):
         self.conf.loadCfg()
 
         # Load address
-        index = self.devCombo.findText(self.conf.dAddr)
+        index = self.devCombo.findText(str(self.conf.dAddr))
         if index != -1:
             self.devCombo.setCurrentIndex(index)
 
         self.tpChan.clear()
-        self.tpChan.insert(self.conf.tpChan)
+        self.tpChan.insert(str(self.conf.tpChan))
 
         self.tpTChan.clear()
-        self.tpTChan.insert(self.conf.tpTChan)
+        self.tpTChan.insert(str(self.conf.tpTChan))
 
         self.pdChan.clear()
-        self.pdChan.insert(self.conf.pdChan)
+        self.pdChan.insert(str(self.conf.pdChan))
 
         self.pdTChan.clear()
-        self.pdTChan.insert(self.conf.pdTChan)
+        self.pdTChan.insert(str(self.conf.pdTChan))
 
         self.binEntry.clear()
-        self.binEntry.insert(self.conf.binSize)
+        self.binEntry.insert(str(self.conf.binSize))
 
         self.freqEntry.clear()
-        self.freqEntry.insert(self.conf.sampFreq)
+        self.freqEntry.insert(str(self.conf.sampFreq))
 
         self.wSizeEntry.clear()
-        self.wSizeEntry.insert(self.conf.pWindow)
+        self.wSizeEntry.insert(str(self.conf.pWindow))
 
         self.savePerEntry.clear()
-        self.savePerEntry.insert(self.conf.sPeroid)
+        self.savePerEntry.insert(str(self.conf.sPeriod))
         
         # w2 = self.avgDD.currentText()
-        index = self.avgDD.findText(self.conf.sAvg)
+        index = self.avgDD.findText(str(self.conf.sAvg))
         if index != -1:
             self.avgDD.setCurrentIndex(index)
         
         self.saveLocEntry.clear()
-        self.saveLocEntry.insert(self.conf.sLoc)
+        self.saveLocEntry.insert(str(self.conf.sLoc))
 
         pass
 
     def saveSettings(self):
         """ Save settings in text boxes """
+        self.getSettings()
+        self.conf.set(self.settings)
         self.conf.saveCfg()
         pass
 
     def getSettings(self):
         """ Get settings from text boxes """
-        s1 = self.devCombo.currentText()
+        # Addrs
+        s0 = self.devCombo.currentText()
+        s1 = self.pdChan.text()
         s2 = self.tpChan.text()
-        s3 = self.tpTChan.text()
-        s4 = self.pdChan.text()
-        s5 = self.pdTChan.text()
+        s3 = self.pdTChan.text()
+        s4 = self.tpTChan.text()
 
-        v1 = int(self.binEntry.text())
-        v2 = int(self.freqEntry.text())
-        v3 = self.wSizeEntry.text()
+        # Plot settings
+        v0 = int(self.binEntry.text())
+        v1 = int(self.freqEntry.text())
+        v2 = self.wSizeEntry.text()
 
-        w1 = self.savePerEntry.text()
-        w2 = self.avgDD.currentText()
-        w3 = self.saveLocEntry.text()
+        # Save settings
+        w0 = self.savePerEntry.text()
+        w1 = self.avgDD.currentText()
+        w2 = self.saveLocEntry.text()
 
-        self.settings = [s1, s2, s3, s4, s5, v1, v2, v3, w1, w2, w3]
-        self.settings1 = [s1, s2, s3, s4, s5, v1, v2]
-
-        # print(settings)
+        # Set settings in list
+        self.settings = [s0, s1, s2, s3, s4, v0, v1, v2, w0, w1, w2]
+        self.settings1 = [s0, s1, s2, s3, s4, v0, v1]
 
         return None
 
 
 class InstrumentThread(threading.Thread):
     def __init__(self, func, settings):
+        """
+        Initialize the thread
+
+        Args:
+        - func: function to call to update plots
+        - settings: list of 
+            [daq channel, thermopile channel, thermopile thermocouple channel, 
+             photodiode channel, photodiode thermocouple channel, bin size, collection frequency]
+        """
         # Function that needs to be called from the class above.
         self.func = func
 
@@ -286,10 +315,10 @@ class InstrumentThread(threading.Thread):
         self.daemon = True
 
         self.chan = settings[0]
-        self.pdChan = settings[3]
-        self.thermoChan = settings[1]
-        self.pdTempChan = settings[4]
-        self.thermoTempChan = settings[2]
+        self.pdChan = settings[1]
+        self.thermoChan = settings[2]
+        self.pdTempChan = settings[3]
+        self.thermoTempChan = settings[4]
         self.sper = settings[5]
         self.sampleFreq = settings[6]
 
