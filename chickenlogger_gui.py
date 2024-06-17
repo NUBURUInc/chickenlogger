@@ -23,6 +23,15 @@ uiclass, baseclass = pg.Qt.loadUiType("MainWindow.ui")
 
 class Cfg():
     def __init__(self):
+        """
+        Version 0.1.1
+
+        Chicken logger:
+        - Initial release 0.1.0 - Ryan Robinson
+        - Updated release 0.1.1 - Updated monitor and record rates to be pulled from config file, settings.yml
+        
+        contact: aaron.liu@nuburu.net
+        """
         pass
 
 class MainWindow(uiclass, baseclass):
@@ -67,8 +76,10 @@ class MainWindow(uiclass, baseclass):
         # self.saveLocEntry.setValidator(QtGui.QIntValidator())
 
         # Parameters
-        sampleinterval=1/2000 # 0.01
-        timewindow=1.
+        self.getSettings()
+        freq = int(self.freqEntry.text())
+        sampleinterval=1/freq #2000 # 0.01
+        timewindow=int(self.wSizeEntry.text())
         self.interval = int(sampleinterval * 1000)
         self.bufsize = int(timewindow / sampleinterval)
         self.x = np.linspace(-timewindow, 0.0, self.bufsize)
@@ -84,11 +95,14 @@ class MainWindow(uiclass, baseclass):
         self.sig.request_graph_update.connect(self.updateGraphs)
 
         # Create thread for talking to DAQ
-        self.getSettings()
+        # self.getSettings()
         self.iThread = InstrumentThread(func=self.updateData, settings=self.settings1)
 
         # Format plots
         self.__formatPlots()
+
+        # Monitor Restart Boolean
+        self.isRestart = False
 
         # Dropdown menue - NOT IMPLIMENTED YET
         self.avgDD.addItem('True')
@@ -138,6 +152,14 @@ class MainWindow(uiclass, baseclass):
     def startPlots(self):
         """ Start the measurement and live plotting """
         self.getSettings()
+        # Add a re-format or update plot based on new settings from user - NOT IMPLEMENTTED
+
+        # Clears data if monitor is restarted again.  
+        if self.isRestart:
+            self.resetData()
+            self.isRestart = False
+
+        # self.__formatPlots()
         self.iThread = InstrumentThread(func=self.updateData, settings = self.settings1)
         self.iThread.start()
         return None
@@ -145,6 +167,7 @@ class MainWindow(uiclass, baseclass):
     def stopPlots(self):
         """ Stop the measurement and live plotting """
         self.iThread.terminate()
+        self.isRestart = True
         return None
 
     def startMonitor(self):
@@ -184,6 +207,14 @@ class MainWindow(uiclass, baseclass):
         self.startRecordButton.setDisabled(False)
         self.stopRecordButton.setDisabled(True)
         self.saving = False
+        return None
+
+    def resetData(self):
+        """Set data buffers to 0.0"""
+        self.b0 = collections.deque([0.0] * self.bufsize, self.bufsize)
+        self.b1 = collections.deque([0.0] * self.bufsize, self.bufsize)
+        self.b2 = collections.deque([0.0] * self.bufsize, self.bufsize)
+        self.b3 = collections.deque([0.0] * self.bufsize, self.bufsize)
         return None
 
     def updateGraphs(self):
@@ -356,8 +387,8 @@ class InstrumentThread(threading.Thread):
     def record(self):
         """ Method to start data collection """
         self.stop.clear()
-        self.sper = 10 # sample period
-        self.sampleFreq = 2000
+        # self.sper = 10 # sample period
+        # self.sampleFreq = 2000
 
         # Collect data
         with nidaqmx.Task() as task:
