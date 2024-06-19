@@ -1,14 +1,14 @@
 aqc:
   bin: 10
-  freq: 2000
-  window: 1
+  freq: 100
+  window: 60
 daq:
-  chan: Dev4
-  pdChan: AI2
-  pdTempChan: AI4
-  thermoChan: AI1
-  thermoTempChan: AI3
+  chan: Dev1
+  pdChan: AI1
+  pdTempChan: AI0
+  thermoChan: AI3
+  thermoTempChan: AI4
 save:
   avg: true
-  loc: ./test_data
-  per: 10
+  loc: ./test_data_1
+  per: 1

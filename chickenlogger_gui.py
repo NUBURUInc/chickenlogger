@@ -154,7 +154,7 @@ class MainWindow(uiclass, baseclass):
         self.getSettings()
         # Add a re-format or update plot based on new settings from user - NOT IMPLEMENTTED
 
-        # Clears data if monitor is restarted again.  
+        # Zeroes data if monitor is restarted again.  
         if self.isRestart:
             self.resetData()
             self.isRestart = False
@@ -226,7 +226,9 @@ class MainWindow(uiclass, baseclass):
         return None
 
     def updateData(self, data):
-        """ Update the data from the lastest measurement """
+        """ Update the data from the lastest measurement 
+        Row Heders: Time, PD Voltage [V], PD Temp [degC], TP Voltage [V], TP Temp [degC]
+        """
         self.b0.extend(data[0])
         self.b1.extend(data[1])
         self.b2.extend(data[2])
