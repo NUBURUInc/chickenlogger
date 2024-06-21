@@ -197,7 +197,8 @@ class MainWindow(uiclass, baseclass):
 
         # Get settings
         self.savePer = int(self.savePerEntry.text())
-        self.saveName = '/'.join([self.saveLocEntry.text(),'save_data.csv'])
+        filename = time.strftime(f"ChknLog_%H%M%S-%m%d%Y.csv", time.localtime())
+        self.saveName = '/'.join([self.saveLocEntry.text(), filename])
 
         self.saving = True
         return None
